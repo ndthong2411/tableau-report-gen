@@ -1,0 +1,8 @@
+streamlit
+pandas
+networkx
+matplotlib
+plotly
+logzero
+tableauhyperapi
+xhtml2pdf
