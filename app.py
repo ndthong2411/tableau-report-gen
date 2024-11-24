@@ -98,6 +98,8 @@ def main():
                     st.dataframe(worksheets_df)
                 else:
                     st.write("No worksheets found.")
+            # 
+
             # elif section == "Dashboards":
             #     dashboards_df = report['metadata'].get('dashboards', pd.DataFrame())
             #     if not dashboards_df.empty:
@@ -115,6 +117,9 @@ def main():
             #                 st.write(ds_data)
             #     else:
             #         st.write("No data sources found.")
+            
+            # 
+
             elif section == "Dependency DAG":
                 calculated_fields_df = report['metadata'].get('calculated_fields', pd.DataFrame())
                 if not calculated_fields_df.empty:
