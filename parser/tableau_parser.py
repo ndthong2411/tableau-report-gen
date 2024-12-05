@@ -8,8 +8,7 @@ from tableauhyperapi import HyperProcess, Connection, Telemetry
 from io import BytesIO
 import re
 import logzero
-from logzero import logger, logfile
-
+from logzero import logger
 
 class TableauWorkbookParser:
     def __init__(self, twbx_file):
@@ -18,6 +17,26 @@ class TableauWorkbookParser:
         self.data = {}
         self.twb_content = None  # To store the extracted .twb content
         self.name_to_caption = {}  # Mapping from 'name' to 'caption'
+        self.name_to_id = {}        # Mapping from 'name' to 'Data Source ID'
+
+        # Initialize logging
+        self.setup_logging()
+
+    def setup_logging(self):
+        log_dir = "logs"
+        if not os.path.exists(log_dir):
+            try:
+                os.makedirs(log_dir)
+                print(f"Created log directory at '{log_dir}'.")
+            except Exception as e:
+                print(f"Failed to create log directory '{log_dir}': {e}")
+                # Optionally, handle the exception, e.g., raise or use default logging
+        try:
+            logzero.logfile(os.path.join(log_dir, "tableau_parser.log"), maxBytes=1e6, backupCount=3)
+            logger.info("Logging initialized for TableauWorkbookParser.")
+        except Exception as e:
+            print(f"Failed to initialize logging: {e}")
+            # Optionally, handle the exception, e.g., use default logging
 
     def decompress_twbx(self):
         try:
@@ -56,11 +75,14 @@ class TableauWorkbookParser:
             self.metadata['source_build'] = root.attrib.get('source-build', 'Unknown')
             logger.info(f"Tableau Version: {self.metadata['version']}")
 
-            # Extract data sources first to build the name-to-caption mapping
+            # Extract data sources first to build the name-to-caption and name-to-id mappings
             self.data['data_sources'] = self.extract_data_sources(root, namespaces)
 
             # Extract calculated fields
             self.metadata['calculated_fields'] = self.extract_calculated_fields(root, namespaces)
+
+            # Extract original fields
+            self.metadata['original_fields'] = self.extract_original_fields(root, namespaces)
 
             # Extract worksheets
             self.metadata['worksheets'] = self.extract_worksheets(root, namespaces)
@@ -84,51 +106,54 @@ class TableauWorkbookParser:
         return namespaces
 
     def extract_data_sources(self, root, namespaces):
-        data_sources = {}
+        data_sources_list = []
         datasource_tag = './/{{{}}}datasource'.format(namespaces.get('tableau', '')) if 'tableau' in namespaces else './/datasource'
         seen_data_sources = {}
 
         for ds in root.findall(datasource_tag):
             # Attempt to get 'caption' first; fallback to 'name'
             ds_caption = ds.attrib.get('caption')
-            ds_identifier = ds_caption if ds_caption else ds.attrib.get('name', 'Unnamed DataSource')
+            ds_name = ds.attrib.get('name', 'Unnamed DataSource')
+            ds_identifier = ds_caption if ds_caption else ds_name
 
             # Handle duplicates by appending a counter
-            original_ds_identifier = ds_identifier
-            counter = 1
-            while ds_identifier in data_sources:
-                ds_identifier = f"{original_ds_identifier}_{counter}"
-                counter += 1
-
-            # Populate the name_to_caption mapping using 'name' as key
-            ds_name = ds.attrib.get('name')
-            if ds_name:
-                self.name_to_caption[ds_name] = ds_caption if ds_caption else ds_name
-                logger.info(f"Mapping Data Source Name '{ds_name}' to Caption '{self.name_to_caption[ds_name]}'")
+            if ds_identifier in seen_data_sources:
+                seen_data_sources[ds_identifier] += 1
+                ds_identifier_unique = f"{ds_identifier}_{seen_data_sources[ds_identifier]}"
+                logger.warning(f"Duplicate Data Source Name found. Renamed '{ds_identifier}' to '{ds_identifier_unique}'")
             else:
-                logger.warning(f"Data Source without 'name' attribute found. Identifier used: {ds_identifier}")
+                seen_data_sources[ds_identifier] = 1
+                ds_identifier_unique = ds_identifier
 
-            # Optional: Log whether 'caption' was used or 'name'
+            # Populate the name_to_caption and name_to_id mappings using 'name' as key
+            if ds.attrib.get('name'):
+                self.name_to_caption[ds.attrib.get('name')] = ds_caption if ds_caption else ds_name
+                self.name_to_id[ds.attrib.get('name')] = ds_identifier_unique
+                logger.info(f"Mapping Data Source Name '{ds.attrib.get('name')}' to Caption '{self.name_to_caption[ds.attrib.get('name')]}' and ID '{ds_identifier_unique}'")
+            else:
+                logger.warning(f"Data Source without 'name' attribute found. Identifier used: {ds_identifier_unique}")
+
+            # Log whether 'caption' was used or 'name'
             if ds_caption:
                 logger.info(f"Data Source Caption: {ds_caption}")
             else:
-                logger.warning(f"'caption' not found. Using 'name' for Data Source: {ds_identifier}")
+                logger.warning(f"'caption' not found. Using 'name' for Data Source: {ds_identifier_unique}")
 
             ds_file = ds.attrib.get('file', None)
-            if ds_file:
-                hyper_file_path = os.path.join(os.path.dirname(self.twbx_file), ds_file)
-                df = self.read_hyper_file(hyper_file_path)
-                data_sources[ds_identifier] = df if df is not None else 'Placeholder for connection-only data source'
-                if df is not None:
-                    logger.info(f"Data Source '{ds_identifier}' loaded successfully from {ds_file}.")
-                else:
-                    logger.warning(f"Data Source '{ds_identifier}' has no associated .hyper file.")
-            else:
-                data_sources[ds_identifier] = 'Placeholder for connection-only data source'
-                logger.info(f"Data Source '{ds_identifier}' does not have an associated .hyper file.")
+            has_data = 'Yes' if ds_file else 'No'
+            hyper_file_path = os.path.join(os.path.dirname(self.twbx_file), ds_file) if ds_file else None
 
-        logger.info(f"Extracted {len(data_sources)} data sources.")
-        return data_sources
+            data_sources_list.append({
+                'Data Source ID': ds_identifier_unique,
+                'Name': ds_name,
+                'Caption': ds_caption if ds_caption else ds_name,
+                'Has Data': has_data,
+                'Hyper File Path': hyper_file_path
+            })
+
+        df_data_sources = pd.DataFrame(data_sources_list)
+        logger.info(f"Extracted {len(df_data_sources)} data sources.")
+        return df_data_sources
 
     def extract_calculated_fields(self, root, namespaces):
         calculated_fields = []
@@ -170,13 +195,13 @@ class TableauWorkbookParser:
                 datasource_dependencies = column.find(datasource_tag)
                 data_source_name = datasource_dependencies.attrib.get('datasource') if datasource_dependencies is not None else 'Unknown Source'
 
-                # Replace 'name' with 'caption' using the mapping
-                if data_source_name != 'Unknown Source' and data_source_name in self.name_to_caption:
-                    data_source_caption = self.name_to_caption[data_source_name]
-                    logger.info(f"Replaced Data Source Name '{data_source_name}' with Caption '{data_source_caption}'")
-                    data_source_name = data_source_caption
+                # Map data_source_name to Data Source ID
+                data_source_id = 'Unknown Source'
+                if data_source_name != 'Unknown Source' and data_source_name in self.name_to_id:
+                    data_source_id = self.name_to_id[data_source_name]
+                    logger.info(f"Mapped Data Source Name '{data_source_name}' to ID '{data_source_id}'")
                 else:
-                    logger.warning(f"No mapping found for Data Source Name '{data_source_name}'. Using as is.")
+                    logger.warning(f"No mapping found for Data Source Name '{data_source_name}'. Using 'Unknown Source'")
 
                 # Extract dependencies from the formula using regex (assuming column names are within square brackets)
                 dependencies = re.findall(r'\[([^\]]+)\]', formula)
@@ -185,13 +210,71 @@ class TableauWorkbookParser:
                     'Field Name': field_name_unique,
                     'Formula': formula,
                     'Alias': alias_value,
-                    'Data Source': data_source_name,
+                    'Data Source ID': data_source_id,
                     'Dependencies': dependencies
                 })
 
         df_calculated = pd.DataFrame(calculated_fields)
         logger.info(f"Extracted {len(df_calculated)} calculated fields.")
         return df_calculated
+
+    def extract_original_fields(self, root, namespaces):
+        original_fields = []
+        column_tag = './/{{{}}}column'.format(namespaces.get('tableau', '')) if 'tableau' in namespaces else './/column'
+        seen_fields = {}
+
+        for column in root.findall(column_tag):
+            # Skip if it's a calculated field
+            calc_tag = './/{{{}}}calculation'.format(namespaces.get('tableau', '')) if 'tableau' in namespaces else './/calculation'
+            calc = column.find(calc_tag)
+            if calc is not None and calc.attrib.get('class') == 'tableau':
+                continue  # Skip calculated fields
+
+            # Prioritize 'caption' over 'name' for field name
+            field_caption = column.attrib.get('caption')
+            field_name = field_caption if field_caption else column.attrib.get('name', 'Unnamed Original Field')
+
+            # Handle duplicates by appending a counter
+            if field_name in seen_fields:
+                seen_fields[field_name] += 1
+                field_name_unique = f"{field_name}_{seen_fields[field_name]}"
+                logger.warning(f"Duplicate Original Field Name found. Renamed '{field_name}' to '{field_name_unique}'")
+            else:
+                seen_fields[field_name] = 1
+                field_name_unique = field_name
+
+            # Log whether 'caption' or 'name' was used
+            if field_caption:
+                logger.info(f"Original Field Caption: {field_caption}")
+            else:
+                logger.warning(f"'caption' not found. Using 'name' for Original Field: {field_name}")
+
+            # Extract data source
+            datasource_tag = './/{{{}}}datasource-dependencies'.format(namespaces.get('tableau', '')) if 'tableau' in namespaces else './/datasource-dependencies'
+            datasource_dependencies = column.find(datasource_tag)
+            data_source_name = datasource_dependencies.attrib.get('datasource') if datasource_dependencies is not None else 'Unknown Source'
+
+            # Map data_source_name to Data Source ID
+            data_source_id = 'Unknown Source'
+            if data_source_name != 'Unknown Source' and data_source_name in self.name_to_id:
+                data_source_id = self.name_to_id[data_source_name]
+                logger.info(f"Mapped Data Source Name '{data_source_name}' to ID '{data_source_id}'")
+            else:
+                logger.warning(f"No mapping found for Data Source Name '{data_source_name}'. Using 'Unknown Source'")
+
+            datatype = column.attrib.get('datatype', 'Unknown')
+            role = column.attrib.get('role', 'Unknown')
+
+            original_fields.append({
+                'Field Name': field_name_unique,
+                'Data Source ID': data_source_id,
+                'Datatype': datatype,
+                'Role': role
+            })
+
+        df_original = pd.DataFrame(original_fields)
+        logger.info(f"Extracted {len(df_original)} original fields.")
+        return df_original
 
     def extract_worksheets(self, root, namespaces):
         worksheets_info = []
@@ -246,13 +329,13 @@ class TableauWorkbookParser:
 
                     data_source = datasource_dependencies.attrib.get('datasource', 'Unknown Source')
 
-                    # Replace 'name' with 'caption' using the mapping
-                    if data_source != 'Unknown Source' and data_source in self.name_to_caption:
-                        data_source_caption = self.name_to_caption[data_source]
-                        logger.info(f"Replaced Data Source Name '{data_source}' with Caption '{data_source_caption}'")
-                        data_source = data_source_caption
+                    # Map data_source to Data Source ID
+                    data_source_id = 'Unknown Source'
+                    if data_source != 'Unknown Source' and data_source in self.name_to_id:
+                        data_source_id = self.name_to_id[data_source]
+                        logger.info(f"Mapped Data Source Name '{data_source}' to ID '{data_source_id}'")
                     else:
-                        logger.warning(f"No mapping found for Data Source Name '{data_source}'. Using as is.")
+                        logger.warning(f"No mapping found for Data Source Name '{data_source}'. Using 'Unknown Source'")
 
                     datatype = column.attrib.get('datatype', 'Unknown')
                     role = column.attrib.get('role', 'Unknown')
@@ -260,7 +343,7 @@ class TableauWorkbookParser:
                     worksheets_info.append({
                         'Worksheet Name': ws_name_unique,
                         'Column Name': column_name_unique,
-                        'Data Source': data_source,
+                        'Data Source ID': data_source_id,
                         'Datatype': datatype,
                         'Role': role
                     })
@@ -268,7 +351,7 @@ class TableauWorkbookParser:
                 worksheets_info.append({
                     'Worksheet Name': ws_name_unique,
                     'Column Name': 'No Data Source',
-                    'Data Source': 'None',
+                    'Data Source ID': 'None',
                     'Datatype': 'N/A',
                     'Role': 'N/A'
                 })
@@ -304,6 +387,7 @@ class TableauWorkbookParser:
             else:
                 logger.warning(f"'caption' not found. Using 'name' for Dashboard: {dashboard_name}")
 
+            # Extract worksheets used in the dashboard
             worksheets_tag = './/{{{}}}worksheet'.format(namespaces.get('tableau', '')) if 'tableau' in namespaces else './/worksheet'
             worksheets = dashboard.findall(worksheets_tag)
             logger.info(f"Dashboard '{dashboard_name_unique}' has {len(worksheets)} worksheets.")
@@ -334,6 +418,7 @@ class TableauWorkbookParser:
                             data_frame = connection.execute_list_query(query)
                             columns = [col.name for col in catalog.get_table_definition(table).columns]
                             df = pd.DataFrame(data_frame, columns=columns)
+                            logger.info(f"Data from table '{table}' loaded successfully.")
                             return df  # Assuming one table per .hyper file
             return None
         except Exception as e:

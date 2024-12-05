@@ -1,16 +1,12 @@
 # utils/helpers.py
 
 import base64
+import logzero
+from logzero import logger
 
-
-def image_to_base64(img_bytes):
-    """
-    Encodes image bytes to a base64 string.
-
-    Parameters:
-        img_bytes (bytes): Image data in bytes.
-
-    Returns:
-        str: Base64 encoded string of the image.
-    """
-    return base64.b64encode(img_bytes).decode()
+def image_to_base64(image_bytes):
+    try:
+        return base64.b64encode(image_bytes).decode('utf-8')
+    except Exception as e:
+        logger.error(f"Failed to convert image to base64: {e}")
+        return ""

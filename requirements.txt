@@ -1,8 +1,7 @@
 streamlit
 pandas
-networkx
-matplotlib
-plotly
 logzero
+networkx
+graphviz
 tableauhyperapi
 xhtml2pdf
