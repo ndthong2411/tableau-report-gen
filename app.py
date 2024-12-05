@@ -114,7 +114,7 @@ def main():
         # Display selected report sections in the main area
         for section in report_sections:
             if section in selected_sections:
-                st.header(section)
+                st.header(section)  # Ensure this is called only once per section
                 try:
                     if section == "Version Information":
                         version_info = {
@@ -127,7 +127,7 @@ def main():
                     elif section == "Calculated Fields":
                         calculated_fields_df = report['metadata'].get('calculated_fields', pd.DataFrame())
                         if not calculated_fields_df.empty:
-                            st.subheader("Calculated Fields")
+                            # st.subheader("Calculated Fields")
                             # Adjust index to start from 1
                             calculated_fields_df = calculated_fields_df.reset_index(drop=True)
                             calculated_fields_df.index = calculated_fields_df.index + 1
@@ -144,7 +144,7 @@ def main():
                     elif section == "Original Fields":
                         original_fields_df = report['metadata'].get('original_fields', pd.DataFrame())
                         if not original_fields_df.empty:
-                            st.subheader("Original Fields")
+                            # st.subheader("Original Fields")
                             # Adjust index to start from 1
                             original_fields_df = original_fields_df.reset_index(drop=True)
                             original_fields_df.index = original_fields_df.index + 1
@@ -161,7 +161,7 @@ def main():
                     elif section == "Worksheets":
                         worksheets_df = report['metadata'].get('worksheets', pd.DataFrame())
                         if not worksheets_df.empty:
-                            st.subheader("Worksheets")
+                            # st.subheader("Worksheets")
                             # Adjust index to start from 1
                             worksheets_df = worksheets_df.reset_index(drop=True)
                             worksheets_df.index = worksheets_df.index + 1
@@ -178,7 +178,7 @@ def main():
                     elif section == "Data Sources":
                         df_data_sources = report['data'].get('data_sources', pd.DataFrame())
                         if not df_data_sources.empty:
-                            st.subheader("Data Sources")
+                            # st.subheader("Data Sources")
                             # Adjust index to start from 1
                             df_data_sources = df_data_sources.reset_index(drop=True)
                             df_data_sources.index = df_data_sources.index + 1
@@ -198,7 +198,7 @@ def main():
                         data_sources_df = report['data'].get('data_sources', pd.DataFrame())
 
                         if not calculated_fields_df.empty and not original_fields_df.empty:
-                            st.subheader("Dependency DAG")
+                            # st.subheader("Dependency DAG")
 
                             # Dropdown to select worksheet
                             worksheets = report['metadata'].get('worksheets', pd.DataFrame()).get('Worksheet Name', [])
@@ -227,84 +227,87 @@ def main():
                     logger.error(f"Error displaying section '{section}': {e}")
                     st.error(f"❌ An error occurred while displaying the '{section}' section.")
 
-        st.markdown("---")  # Divider
+    st.markdown("---")  # Divider
 
-        # Sidebar: Report Export Options
-        st.sidebar.header("Export Report")
-        export_format = st.sidebar.selectbox("Select export format:", ["HTML", "PDF"])
-    
-        if st.sidebar.button("Generate and Download Report"):
-            logger.info("Generate and Download Report button clicked.")
-            # Use a placeholder to manage the loading spinner and download button
-            with st.container():
-                with st.spinner('🔄 Generating report...'):
-                    try:
-                        # Generate HTML report
-                        html_report = generate_html_report(selected_sections, report)
-                        logger.info("HTML report generated.")
+    # Sidebar: Report Export Options
+    st.sidebar.header("Export Report")
+    export_format = st.sidebar.selectbox("Select export format:", ["HTML", "PDF"])
 
-                        # Handle Dependency DAG section
-                        if "Dependency DAG" in selected_sections and not report['metadata'].get('calculated_fields', pd.DataFrame()).empty:
-                            G = generate_dag(report['metadata']['calculated_fields'], report['metadata']['original_fields'], report['data']['data_sources'])
-                            dot = plot_dag_graphviz(G)
-                            img_bytes = dot.pipe(format='png')
-                            img_base64 = image_to_base64(img_bytes)
-                            # Embed the image in HTML
-                            html_report = html_report.replace(
-                                "<p>See the Dependency DAG visualization within the app.</p>",
-                                f"<h3>Dependency DAG</h3><img src='data:image/png;base64,{img_base64}'/>"
-                            )
-                            logger.info("Dependency DAG embedded in HTML report.")
+    # Create a placeholder for download buttons
+    download_placeholder = st.sidebar.empty()
 
-                        # Generate download links
-                        if export_format == "HTML":
-                            # Provide download link for HTML
-                            st.markdown("### 📥 Download Report")
-                            st.download_button(
-                                label="📄 Download HTML Report",
-                                data=html_report,
-                                file_name=f"tableau_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
-                                mime="text/html"
-                            )
-                            logger.info("HTML report ready for download.")
-                        elif export_format == "PDF":
-                            # Convert HTML to PDF using xhtml2pdf or any other library
-                            try:
-                                pdf = convert_html_to_pdf(html_report)
-                                if pdf:
-                                    st.markdown("### 📥 Download Report")
-                                    st.download_button(
-                                        label="📄 Download PDF Report",
-                                        data=pdf,
-                                        file_name=f"tableau_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-                                        mime="application/pdf"
-                                    )
-                                    logger.info("PDF report ready for download.")
-                                else:
-                                    st.error("❌ Failed to generate PDF report.")
-                                    logger.error("Failed to generate PDF report: convert_html_to_pdf returned None.")
-                            except Exception as e:
-                                logger.error(f"Failed to generate PDF: {e}")
-                                st.error(f"❌ Failed to generate PDF: {e}")
-                    except Exception as e:
-                        logger.error(f"Failed during report generation: {e}")
-                        st.error(f"❌ An error occurred during report generation: {e}")
+    if st.sidebar.button("Generate and Download Report"):
+        logger.info("Generate and Download Report button clicked.")
+        # Use the placeholder to manage the loading spinner and download button
+        with download_placeholder.container():
+            with st.spinner('🔄 Generating report...'):
+                try:
+                    # Generate HTML report
+                    html_report = generate_html_report(selected_sections, report)
+                    logger.info("HTML report generated.")
 
-        # Sidebar: Download Original File
-        st.sidebar.header("Download Original File")
-        if st.sidebar.button("⬇️ Download Uploaded `.twbx`"):
-            try:
-                with open(temp_twbx_path, "rb") as f:
-                    st.sidebar.download_button(
-                        label="⬇️ Download `.twbx` File",
-                        data=f,
-                        file_name=os.path.basename(temp_twbx_path),
-                        mime="application/octet-stream"
-                    )
-                logger.info("Original .twbx file ready for download.")
-            except Exception as e:
-                logger.error(f"Failed to download .twbx file: {e}")
-                st.sidebar.error("❌ Failed to download the original `.twbx` file.")
+                    # Handle Dependency DAG section
+                    if "Dependency DAG" in selected_sections and not report['metadata'].get('calculated_fields', pd.DataFrame()).empty:
+                        G = generate_dag(report['metadata']['calculated_fields'], report['metadata']['original_fields'], report['data']['data_sources'])
+                        dot = plot_dag_graphviz(G)
+                        img_bytes = dot.pipe(format='png')
+                        img_base64 = image_to_base64(img_bytes)
+                        # Embed the image in HTML
+                        html_report = html_report.replace(
+                            "<p>See the Dependency DAG visualization within the app.</p>",
+                            f"<h3>Dependency DAG</h3><img src='data:image/png;base64,{img_base64}'/>"
+                        )
+                        logger.info("Dependency DAG embedded in HTML report.")
+
+                    # Generate download links
+                    if export_format == "HTML":
+                        # Provide download link for HTML
+                        st.markdown("### 📥 Download Report")
+                        st.download_button(
+                            label="📄 Download HTML Report",
+                            data=html_report,
+                            file_name=f"tableau_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                            mime="text/html"
+                        )
+                        logger.info("HTML report ready for download.")
+                    elif export_format == "PDF":
+                        # Convert HTML to PDF using xhtml2pdf or any other library
+                        try:
+                            pdf = convert_html_to_pdf(html_report)
+                            if pdf:
+                                st.markdown("### 📥 Download Report")
+                                st.download_button(
+                                    label="📄 Download PDF Report",
+                                    data=pdf,
+                                    file_name=f"tableau_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                                    mime="application/pdf"
+                                )
+                                logger.info("PDF report ready for download.")
+                            else:
+                                st.error("❌ Failed to generate PDF report.")
+                                logger.error("Failed to generate PDF report: convert_html_to_pdf returned None.")
+                        except Exception as e:
+                            logger.error(f"Failed to generate PDF: {e}")
+                            st.error(f"❌ Failed to generate PDF: {e}")
+                except Exception as e:
+                    logger.error(f"Failed during report generation: {e}")
+                    st.error(f"❌ An error occurred during report generation: {e}")
+
+    # Sidebar: Download Original File
+    st.sidebar.header("Download Original File")
+    if st.sidebar.button("⬇️ Download Uploaded `.twbx`"):
+        try:
+            with open(temp_twbx_path, "rb") as f:
+                st.sidebar.download_button(
+                    label="⬇️ Download `.twbx` File",
+                    data=f,
+                    file_name=os.path.basename(temp_twbx_path),
+                    mime="application/octet-stream"
+                )
+            logger.info("Original .twbx file ready for download.")
+        except Exception as e:
+            logger.error(f"Failed to download .twbx file: {e}")
+            st.sidebar.error("❌ Failed to download the original `.twbx` file.")
 
 if __name__ == "__main__":
     main()
