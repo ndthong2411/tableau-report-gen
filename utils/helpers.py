@@ -10,3 +10,5 @@ def image_to_base64(image_bytes):
     except Exception as e:
         logger.error(f"Failed to convert image to base64: {e}")
         return ""
+
+
