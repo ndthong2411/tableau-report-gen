@@ -1,4 +1,4 @@
-streamlit>=1.0.0
+streamlit==1.40.0
 pandas>=1.0.0
 logzero>=1.7.0
 graphviz>=0.20.1
