@@ -1,3 +1,5 @@
+# app.py
+
 import streamlit as st
 import os
 from parser.tableau_parser import TableauWorkbookParser
@@ -12,11 +14,31 @@ from datetime import datetime
 from graphviz import Digraph
 
 def plot_dag_graphviz(G):
-    dot = Digraph(comment='Dependency DAG')
-    for node in G.nodes:
-        dot.node(node)
-    for edge in G.edges:
-        dot.edge(edge[0], edge[1])
+    dot = Digraph(comment='Dependency DAG', format='png')
+    dot.attr(rankdir='LR')  # Left to Right orientation
+    dot.attr('node', fontsize='10')
+
+    # Define node styles based on type
+    for node, data in G.nodes(data=True):
+        node_type = data.get('type', 'Original Field')
+        if node_type == 'Calculated Field':
+            dot.node(node, shape='box', style='filled', color='lightblue')
+        elif node_type == 'Original Field':
+            dot.node(node, shape='ellipse', style='filled', color='#89CFF0')  # Updated color
+        elif node_type == 'Data Source':
+            dot.node(node, shape='rectangle', style='filled', color='orange')
+        else:
+            dot.node(node, shape='ellipse', style='filled', color='grey')  # Default style
+
+    # Define edges with labels
+    for edge in G.edges(data=True):
+        source, target, attrs = edge
+        label = attrs.get('label', '')
+        if label:
+            dot.edge(source, target, label=label, fontsize='8', fontcolor='gray')
+        else:
+            dot.edge(source, target)
+
     return dot
 
 def toggle_table_display(section_key, dataframe, display_limit=10, section_label=""):
@@ -75,7 +97,7 @@ def main():
     # Set Streamlit page configuration
     st.set_page_config(
         page_title="📊 Tableau Workbook Parser and Report Generator",
-        layout="wide",
+        layout="wide",  # Ensures the app uses the full width of the browser
         initial_sidebar_state="expanded",
     )
 
@@ -244,7 +266,8 @@ def main():
                             worksheets = report['metadata'].get('worksheets', pd.DataFrame()).get('Worksheet Name', [])
                             worksheets = worksheets.dropna().unique().tolist()
                             selected_worksheet = st.selectbox("Select Worksheet for DAG:", ["All"] + list(worksheets))
-                            G = generate_dag(calculated_fields_df, original_fields_df, data_sources_df)
+                            
+                            G = generate_dag(calculated_fields_df, original_fields_df, data_sources_df, selected_worksheet)
                             dot = plot_dag_graphviz(G)
                             st.graphviz_chart(dot.source)
                         else:
