@@ -12,6 +12,7 @@ import logzero
 from logzero import logger
 from datetime import datetime
 from graphviz import Digraph
+from functools import partial
 
 def plot_dag_graphviz(G):
     dot = Digraph(comment='Dependency DAG', format='png')
@@ -51,6 +52,13 @@ def toggle_table_display(section_key, dataframe, display_limit=10, section_label
         display_limit (int): Number of rows to display when collapsed.
         section_label (str): Label for the button.
     """
+    # Callback functions to update the session state
+    def show_more():
+        st.session_state[section_key] = True
+
+    def show_less():
+        st.session_state[section_key] = False
+
     # Initialize session state for the section if not already set
     if section_key not in st.session_state:
         st.session_state[section_key] = False
@@ -60,15 +68,13 @@ def toggle_table_display(section_key, dataframe, display_limit=10, section_label
         # Show full table
         st.dataframe(dataframe)
         # Button to show less
-        if st.button(f"📂 Show Less {section_label}", key=f"show_less_{section_key}"):
-            st.session_state[section_key] = False
+        st.button(f"📂 Show Less {section_label}", key=f"show_less_{section_key}", on_click=show_less)
     else:
         # Show limited table
         if len(dataframe) > display_limit:
             st.dataframe(dataframe.head(display_limit))
             # Button to show more
-            if st.button(f"📂 Show More {section_label}", key=f"show_more_{section_key}"):
-                st.session_state[section_key] = True
+            st.button(f"📂 Show More {section_label}", key=f"show_more_{section_key}", on_click=show_more)
         else:
             st.dataframe(dataframe)
 
@@ -305,6 +311,7 @@ def main():
                     logger.info("HTML report generated.")
                     if "Dependency DAG" in selected_sections and not report['metadata'].get('calculated_fields', pd.DataFrame()).empty:
                         worksheets_df = report['metadata'].get('worksheets', pd.DataFrame())
+                        # For embedding the DAG, use "All" to include all dependencies
                         G = generate_dag(report['metadata']['calculated_fields'], report['metadata']['original_fields'], report['data']['data_sources'], worksheets_df, selected_worksheet="All")
                         dot = plot_dag_graphviz(G)
                         img_bytes = dot.pipe(format='png')
