@@ -93,6 +93,8 @@ class TableauWorkbookParser:
             logger.info("Parsing of .twb file completed successfully.")
         except ET.ParseError as pe:
             logger.error(f"Error parsing XML: {pe}")
+        except KeyError as ke:
+            logger.error(f"An unexpected error occurred during parsing: {ke}")
         except Exception as e:
             logger.error(f"An unexpected error occurred during parsing: {e}")
 
@@ -348,6 +350,7 @@ class TableauWorkbookParser:
                         'Role': role
                     })
             else:
+                # Handle dashboards with no worksheets
                 worksheets_info.append({
                     'Worksheet Name': ws_name_unique,
                     'Column Name': 'No Data Source',
@@ -392,12 +395,20 @@ class TableauWorkbookParser:
             worksheets = dashboard.findall(worksheets_tag)
             logger.info(f"Dashboard '{dashboard_name_unique}' has {len(worksheets)} worksheets.")
 
-            for ws in worksheets:
-                ws_name = ws.attrib.get('name', 'Unnamed Worksheet')
+            if worksheets:
+                for ws in worksheets:
+                    ws_name = ws.attrib.get('name', 'Unnamed Worksheet')
+                    dashboards_info.append({
+                        'Dashboard Name': dashboard_name_unique,
+                        'Worksheet Used': ws_name,
+                        'Metadata': 'Additional metadata can be added here'
+                    })
+            else:
+                # Append a row indicating no worksheets are associated with this dashboard
                 dashboards_info.append({
                     'Dashboard Name': dashboard_name_unique,
-                    'Worksheet Used': ws_name,
-                    'Metadata': 'Additional metadata can be added here'
+                    'Worksheet Used': 'No Worksheets',
+                    'Metadata': 'No worksheets associated with this dashboard.'
                 })
 
         df_dashboards = pd.DataFrame(dashboards_info)

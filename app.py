@@ -262,89 +262,104 @@ def main():
                         calculated_fields_df = report['metadata'].get('calculated_fields', pd.DataFrame())
                         original_fields_df = report['metadata'].get('original_fields', pd.DataFrame())
                         data_sources_df = report['data'].get('data_sources', pd.DataFrame())
+                        worksheets_df = report['metadata'].get('worksheets', pd.DataFrame())
                         if not calculated_fields_df.empty and not original_fields_df.empty:
-                            worksheets = report['metadata'].get('worksheets', pd.DataFrame()).get('Worksheet Name', [])
-                            worksheets = worksheets.dropna().unique().tolist()
-                            selected_worksheet = st.selectbox("Select Worksheet for DAG:", ["All"] + list(worksheets))
-                            
-                            G = generate_dag(calculated_fields_df, original_fields_df, data_sources_df, selected_worksheet)
-                            dot = plot_dag_graphviz(G)
-                            st.graphviz_chart(dot.source)
+                            if 'Worksheet Name' in worksheets_df.columns:
+                                worksheets = worksheets_df['Worksheet Name'].dropna().unique().tolist()
+                                if worksheets:
+                                    selected_worksheet = st.selectbox("Select Worksheet for DAG:", ["All"] + list(worksheets))
+                                else:
+                                    selected_worksheet = "All"
+                                    st.warning("No worksheets available for selection. Displaying the entire DAG.")
+                            else:
+                                selected_worksheet = "All"
+                                st.warning("Worksheet Name column is missing. Displaying the entire DAG.")
+
+                            G = generate_dag(calculated_fields_df, original_fields_df, data_sources_df, worksheets_df, selected_worksheet)
+                            if len(G.nodes) == 0:
+                                st.warning("No data available to display the DAG for the selected worksheet.")
+                            else:
+                                dot = plot_dag_graphviz(G)
+                                st.graphviz_chart(dot.source)
                         else:
                             st.write("Insufficient data to generate Dependency DAG.")
 
+                except KeyError as ke:
+                    logger.error(f"KeyError in section '{section}': {ke}")
+                    st.error(f"❌ A key error occurred while displaying the '{section}' section: {ke}")
                 except Exception as e:
                     logger.error(f"Error displaying section '{section}': {e}")
                     st.error(f"❌ An error occurred while displaying the '{section}' section.")
 
-        st.markdown("---")
-        st.sidebar.header("Export Report")
-        export_format = st.sidebar.selectbox("Select export format:", ["HTML", "PDF"])
-        download_placeholder = st.sidebar.empty()
+    st.markdown("---")
+    st.sidebar.header("Export Report")
+    export_format = st.sidebar.selectbox("Select export format:", ["HTML", "PDF"])
+    download_placeholder = st.sidebar.empty()
 
-        if st.sidebar.button("Generate and Download Report"):
-            logger.info("Generate and Download Report button clicked.")
-            with download_placeholder.container():
-                with st.spinner('🔄 Generating report...'):
-                    try:
-                        html_report = generate_html_report(selected_sections, report)
-                        logger.info("HTML report generated.")
-                        if "Dependency DAG" in selected_sections and not report['metadata'].get('calculated_fields', pd.DataFrame()).empty:
-                            G = generate_dag(report['metadata']['calculated_fields'], report['metadata']['original_fields'], report['data']['data_sources'])
-                            dot = plot_dag_graphviz(G)
-                            img_bytes = dot.pipe(format='png')
-                            img_base64 = image_to_base64(img_bytes)
-                            html_report = html_report.replace(
-                                "<p>See the Dependency DAG visualization within the app.</p>",
-                                f"<h3>Dependency DAG</h3><img src='data:image/png;base64,{img_base64}'/>"
-                            )
-                            logger.info("Dependency DAG embedded in HTML report.")
+    if st.sidebar.button("Generate and Download Report"):
+        logger.info("Generate and Download Report button clicked.")
+        with download_placeholder.container():
+            with st.spinner('🔄 Generating report...'):
+                try:
+                    html_report = generate_html_report(selected_sections, report)
+                    logger.info("HTML report generated.")
+                    if "Dependency DAG" in selected_sections and not report['metadata'].get('calculated_fields', pd.DataFrame()).empty:
+                        worksheets_df = report['metadata'].get('worksheets', pd.DataFrame())
+                        G = generate_dag(report['metadata']['calculated_fields'], report['metadata']['original_fields'], report['data']['data_sources'], worksheets_df, selected_worksheet="All")
+                        dot = plot_dag_graphviz(G)
+                        img_bytes = dot.pipe(format='png')
+                        img_base64 = image_to_base64(img_bytes)
+                        html_report = html_report.replace(
+                            "<p>See the Dependency DAG visualization within the app.</p>",
+                            f"<h3>Dependency DAG</h3><img src='data:image/png;base64,{img_base64}'/>"
+                        )
+                        logger.info("Dependency DAG embedded in HTML report.")
 
-                        if export_format == "HTML":
-                            st.markdown("### 📥 Download Report")
-                            st.download_button(
-                                label="📄 Download HTML Report",
-                                data=html_report,
-                                file_name=f"tableau_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
-                                mime="text/html"
-                            )
-                            logger.info("HTML report ready for download.")
-                        elif export_format == "PDF":
-                            try:
-                                pdf = convert_html_to_pdf(html_report)
-                                if pdf:
-                                    st.markdown("### 📥 Download Report")
-                                    st.download_button(
-                                        label="📄 Download PDF Report",
-                                        data=pdf,
-                                        file_name=f"tableau_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-                                        mime="application/pdf"
-                                    )
-                                    logger.info("PDF report ready for download.")
-                                else:
-                                    st.error("❌ Failed to generate PDF report.")
-                                    logger.error("Failed to generate PDF report: convert_html_to_pdf returned None.")
-                            except Exception as e:
-                                logger.error(f"Failed to generate PDF: {e}")
-                                st.error(f"❌ Failed to generate PDF: {e}")
-                    except Exception as e:
-                        logger.error(f"Failed during report generation: {e}")
-                        st.error(f"❌ An error occurred during report generation: {e}")
+                    if export_format == "HTML":
+                        st.markdown("### 📥 Download Report")
+                        st.download_button(
+                            label="📄 Download HTML Report",
+                            data=html_report,
+                            file_name=f"tableau_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                            mime="text/html"
+                        )
+                        logger.info("HTML report ready for download.")
+                    elif export_format == "PDF":
+                        try:
+                            pdf = convert_html_to_pdf(html_report)
+                            if pdf:
+                                st.markdown("### 📥 Download Report")
+                                st.download_button(
+                                    label="📄 Download PDF Report",
+                                    data=pdf,
+                                    file_name=f"tableau_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                                    mime="application/pdf"
+                                )
+                                logger.info("PDF report ready for download.")
+                            else:
+                                st.error("❌ Failed to generate PDF report.")
+                                logger.error("Failed to generate PDF report: convert_html_to_pdf returned None.")
+                        except Exception as e:
+                            logger.error(f"Failed to generate PDF: {e}")
+                            st.error(f"❌ Failed to generate PDF: {e}")
+                except Exception as e:
+                    logger.error(f"Failed during report generation: {e}")
+                    st.error(f"❌ An error occurred during report generation: {e}")
 
-        st.sidebar.header("Download Original File")
-        if st.sidebar.button("⬇️ Download Uploaded `.twbx`"):
-            try:
-                with open(temp_twbx_path, "rb") as f:
-                    st.sidebar.download_button(
-                        label="⬇️ Download `.twbx` File",
-                        data=f,
-                        file_name=os.path.basename(temp_twbx_path),
-                        mime="application/octet-stream"
-                    )
-                logger.info("Original .twbx file ready for download.")
-            except Exception as e:
-                logger.error(f"Failed to download .twbx file: {e}")
-                st.sidebar.error("❌ Failed to download the original `.twbx` file.")
+    st.sidebar.header("Download Original File")
+    if st.sidebar.button("⬇️ Download Uploaded `.twbx`"):
+        try:
+            with open(temp_twbx_path, "rb") as f:
+                st.sidebar.download_button(
+                    label="⬇️ Download `.twbx` File",
+                    data=f,
+                    file_name=os.path.basename(temp_twbx_path),
+                    mime="application/octet-stream"
+                )
+            logger.info("Original .twbx file ready for download.")
+        except Exception as e:
+            logger.error(f"Failed to download .twbx file: {e}")
+            st.sidebar.error("❌ Failed to download the original `.twbx` file.")
 
 if __name__ == "__main__":
     main()

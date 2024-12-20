@@ -5,7 +5,7 @@ import networkx as nx
 import logzero
 from logzero import logger
 
-def generate_dag(calculated_fields_df, original_fields_df, data_sources_df, selected_worksheet=None):
+def generate_dag(calculated_fields_df, original_fields_df, data_sources_df, worksheets_df, selected_worksheet=None):
     G = nx.DiGraph()
 
     # Add Data Sources
@@ -18,8 +18,8 @@ def generate_dag(calculated_fields_df, original_fields_df, data_sources_df, sele
 
     # Filter based on selected worksheet if provided
     if selected_worksheet and selected_worksheet != "All":
-        # Get columns related to the selected worksheet
-        worksheet_columns = original_fields_df[original_fields_df['Worksheet Name'] == selected_worksheet]['Field Name'].tolist()
+        # Get columns related to the selected worksheet from worksheets_df
+        worksheet_columns = worksheets_df[worksheets_df['Worksheet Name'] == selected_worksheet]['Column Name'].tolist()
         # Also include calculated fields used in this worksheet
         calculated_in_ws = calculated_fields_df[calculated_fields_df['Dependencies'].apply(lambda deps: any(dep in worksheet_columns for dep in deps))]['Field Name'].tolist()
     else:
