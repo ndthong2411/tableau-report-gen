@@ -28,6 +28,8 @@ def plot_dag_graphviz(G):
             dot.node(node, shape='ellipse', style='filled', color='#89CFF0')  # Updated color
         elif node_type == 'Data Source':
             dot.node(node, shape='rectangle', style='filled', color='orange')
+        elif node_type == 'Root':
+            dot.node(node, shape='diamond', style='filled', color='red')  # Distinct shape and color for Root
         else:
             dot.node(node, shape='ellipse', style='filled', color='grey')  # Default style
 
@@ -195,6 +197,9 @@ def main():
                 original_fields_df.rename(columns={'Caption': 'Data Source Caption'}, inplace=True)
                 report['metadata']['original_fields'] = original_fields_df
 
+        # Extract the uploaded file name without extension for root_placeholder
+        file_name = os.path.splitext(uploaded_file.name)[0]
+
         # Iterate through selected sections and display content
         for section in report_sections:
             if section in selected_sections:
@@ -281,7 +286,14 @@ def main():
                                 selected_worksheet = "All"
                                 st.warning("Worksheet Name column is missing. Displaying the entire DAG.")
 
-                            G = generate_dag(calculated_fields_df, original_fields_df, data_sources_df, worksheets_df, selected_worksheet)
+                            G = generate_dag(
+                                calculated_fields_df, 
+                                original_fields_df, 
+                                data_sources_df, 
+                                worksheets_df, 
+                                selected_worksheet, 
+                                root_placeholder=file_name
+                            )
                             if len(G.nodes) == 0:
                                 st.warning("No data available to display the DAG for the selected worksheet.")
                             else:
@@ -312,7 +324,14 @@ def main():
                     if "Dependency DAG" in selected_sections and not report['metadata'].get('calculated_fields', pd.DataFrame()).empty:
                         worksheets_df = report['metadata'].get('worksheets', pd.DataFrame())
                         # For embedding the DAG, use "All" to include all dependencies
-                        G = generate_dag(report['metadata']['calculated_fields'], report['metadata']['original_fields'], report['data']['data_sources'], worksheets_df, selected_worksheet="All")
+                        G = generate_dag(
+                            report['metadata']['calculated_fields'], 
+                            report['metadata']['original_fields'], 
+                            report['data']['data_sources'], 
+                            worksheets_df, 
+                            selected_worksheet="All", 
+                            root_placeholder=file_name
+                        )
                         dot = plot_dag_graphviz(G)
                         img_bytes = dot.pipe(format='png')
                         img_base64 = image_to_base64(img_bytes)
