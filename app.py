@@ -5,14 +5,13 @@ import os
 from parser.tableau_parser import TableauWorkbookParser
 from utils.dag import generate_dag
 from utils.report import generate_html_report, convert_html_to_pdf
-from utils.helpers import image_to_base64
+from utils.helpers import image_to_base64, display_dataframe
 from components.uploader import file_uploader_component
 import pandas as pd
 import logzero
 from logzero import logger
 from datetime import datetime
 from graphviz import Digraph
-from functools import partial
 
 def plot_dag_graphviz(G):
     dot = Digraph(comment='Dependency DAG', format='png')
@@ -44,56 +43,7 @@ def plot_dag_graphviz(G):
 
     return dot
 
-def toggle_table_display(section_key, dataframe, display_limit=10, section_label=""):
-    """
-    Helper function to toggle between showing a limited number of rows and the full dataframe.
-
-    Args:
-        section_key (str): Unique key for the section to manage session state.
-        dataframe (pd.DataFrame): The dataframe to display.
-        display_limit (int): Number of rows to display when collapsed.
-        section_label (str): Label for the button.
-    """
-    # Callback functions to update the session state
-    def show_more():
-        st.session_state[section_key] = True
-
-    def show_less():
-        st.session_state[section_key] = False
-
-    # Initialize session state for the section if not already set
-    if section_key not in st.session_state:
-        st.session_state[section_key] = False
-
-    # Determine whether to show full table or limited rows
-    if st.session_state[section_key]:
-        # Show full table
-        st.dataframe(dataframe)
-        # Button to show less
-        st.button(f"📂 Show Less {section_label}", key=f"show_less_{section_key}", on_click=show_less)
-    else:
-        # Show limited table
-        if len(dataframe) > display_limit:
-            st.dataframe(dataframe.head(display_limit))
-            # Button to show more
-            st.button(f"📂 Show More {section_label}", key=f"show_more_{section_key}", on_click=show_more)
-        else:
-            st.dataframe(dataframe)
-
 def main():
-    # Define unique session state keys for each section
-    section_keys = {
-        "Original Fields": "show_original_fields",
-        "Calculated Fields": "show_calculated_fields",
-        "Worksheets": "show_worksheets",
-        "Data Sources": "show_data_sources"
-    }
-
-    # Initialize session states for all sections
-    for key in section_keys.values():
-        if key not in st.session_state:
-            st.session_state[key] = False
-
     # Ensure logs directory exists
     if not os.path.exists('logs'):
         os.makedirs('logs')
@@ -218,12 +168,7 @@ def main():
                         if not calculated_fields_df.empty:
                             calculated_fields_df = calculated_fields_df.reset_index(drop=True)
                             calculated_fields_df.index = calculated_fields_df.index + 1
-                            toggle_table_display(
-                                section_key=section_keys["Calculated Fields"],
-                                dataframe=calculated_fields_df,
-                                display_limit=10,
-                                section_label="Calculated Fields"
-                            )
+                            display_dataframe(calculated_fields_df, max_rows=10)  # Use helper function
                         else:
                             st.write("No calculated fields found.")
 
@@ -232,12 +177,7 @@ def main():
                         if not original_fields_df.empty:
                             original_fields_df = original_fields_df.reset_index(drop=True)
                             original_fields_df.index = original_fields_df.index + 1
-                            toggle_table_display(
-                                section_key=section_keys["Original Fields"],
-                                dataframe=original_fields_df,
-                                display_limit=10,
-                                section_label="Original Fields"
-                            )
+                            display_dataframe(original_fields_df, max_rows=10)  # Use helper function
                         else:
                             st.write("No original fields found.")
 
@@ -246,12 +186,7 @@ def main():
                         if not worksheets_df.empty:
                             worksheets_df = worksheets_df.reset_index(drop=True)
                             worksheets_df.index = worksheets_df.index + 1
-                            toggle_table_display(
-                                section_key=section_keys["Worksheets"],
-                                dataframe=worksheets_df,
-                                display_limit=10,
-                                section_label="Worksheets"
-                            )
+                            display_dataframe(worksheets_df, max_rows=10)  # Use helper function
                         else:
                             st.write("No worksheets found.")
 
@@ -260,12 +195,7 @@ def main():
                         if not df_data_sources.empty:
                             df_data_sources = df_data_sources.reset_index(drop=True)
                             df_data_sources.index = df_data_sources.index + 1
-                            toggle_table_display(
-                                section_key=section_keys["Data Sources"],
-                                dataframe=df_data_sources,
-                                display_limit=10,
-                                section_label="Data Sources"
-                            )
+                            display_dataframe(df_data_sources, max_rows=10)  # Use helper function
                         else:
                             st.write("No data sources found.")
 

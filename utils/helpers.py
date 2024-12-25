@@ -1,14 +1,22 @@
 # utils/helpers.py
 
+import streamlit as st
 import base64
-import logzero
-from logzero import logger
 
-def image_to_base64(image_bytes):
-    try:
-        return base64.b64encode(image_bytes).decode('utf-8')
-    except Exception as e:
-        logger.error(f"Failed to convert image to base64: {e}")
-        return ""
+def display_dataframe(df, max_rows=10, row_height=33, header_height=50):
 
+    total_rows = len(df)
+    
+    if total_rows > max_rows:
+        # Calculate height to display max_rows with scroll
+        height = (max_rows * row_height) + header_height
+    else:
+        # Calculate height based on the number of rows to fit the table
+        height = (total_rows * row_height) + header_height
+    
+    # Display the dataframe with the calculated height
+    st.dataframe(df, height=height)
 
+def image_to_base64(img_bytes):
+
+    return base64.b64encode(img_bytes).decode('utf-8')
