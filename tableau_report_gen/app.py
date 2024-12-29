@@ -2,11 +2,11 @@
 
 import streamlit as st
 import os
-from parser.tableau_parser import TableauWorkbookParser
-from utils.dag import generate_dag
-from utils.report import generate_html_report, convert_html_to_pdf
-from utils.helpers import image_to_base64, display_dataframe
-from components.uploader import file_uploader_component
+from tableau_report_gen.parser.tableau_parser import TableauWorkbookParser
+from tableau_report_gen.utils.dag import generate_dag
+from tableau_report_gen.utils.report import generate_html_report, convert_html_to_pdf
+from tableau_report_gen.utils.helpers import image_to_base64, display_dataframe
+from tableau_report_gen.components.uploader import file_uploader_component
 import pandas as pd
 import logzero
 from logzero import logger
