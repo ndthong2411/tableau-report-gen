@@ -36,14 +36,14 @@ A Streamlit application to parse Tableau Workbook (`.twbx`) files and generate c
 ## Demo
 
 *Coming Soon: A GIF showcasing the application's functionality.*
-
-1. **Trigger the App from the Command Line:**
+![til](./gif/tableau_demo.gif)
+1. **Trigger the App from the Command Line**
    ![App Launch](path_to_gif/app_launch.gif)
 
-2. **Import a `.twbx` File and Navigate Through the Report:**
+2. **Import a `.twbx` File and Navigate Through the Report**
    ![Report Navigation](path_to_gif/report_navigation.gif)
 
-3. **Visualization of Dependency DAG:**
+3. **Visualization of Dependency DAG**
    ![Dependency DAG](path_to_gif/dependency_dag.gif)
 
 ### Public Tableau Reports
