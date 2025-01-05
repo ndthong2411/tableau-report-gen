@@ -1,17 +1,16 @@
 
-
 ```plaintext
 build/
 tableau_parser_app/
 ├── app.py
 ├── components/
-│   └── uploader.py
+│   └── uploader.py
 ├── parser/
-│   └── tableau_parser.py
+│   └── tableau_parser.py
 ├── utils/
-│   ├── dag.py
-│   ├── helpers.py
-│   └── report.py
+│   ├── dag.py
+│   ├── helpers.py
+│   └── report.py
 ├── logs/
 .gitignore
 Dockerfile
@@ -35,16 +34,8 @@ A Streamlit application to parse Tableau Workbook (`.twbx`) files and generate c
 
 ## Demo
 
-*Coming Soon: A GIF showcasing the application's functionality.*
 ![til](./gif/tableau_demo.gif)
-1. **Trigger the App from the Command Line**
-   ![App Launch](path_to_gif/app_launch.gif)
 
-2. **Import a `.twbx` File and Navigate Through the Report**
-   ![Report Navigation](path_to_gif/report_navigation.gif)
-
-3. **Visualization of Dependency DAG**
-   ![Dependency DAG](path_to_gif/dependency_dag.gif)
 
 ### Public Tableau Reports
 
@@ -54,7 +45,6 @@ Here are some public Tableau reports that are compatible with our application:
 2. *Coming Soon
 3. *Coming Soon
 
-
 ## Installation
 
 ### System Dependencies
@@ -62,20 +52,20 @@ Here are some public Tableau reports that are compatible with our application:
 This package requires [Graphviz](https://graphviz.org/) to be installed on your system.
 
 - **Windows:**
-  - Download the installer from the [Graphviz Download Page](https://graphviz.org/download/) and follow the installation instructions.
-  - Ensure that the `bin` directory (e.g., `C:\Program Files\Graphviz\bin`) is added to your system's `PATH`.
+  - Download the installer from the [Graphviz Download Page](https://graphviz.org/download/) and follow the installation instructions.
+  - Ensure that the `bin` directory (e.g., `C:\Program Files\Graphviz\bin`) is added to your system's `PATH`.
 
 - **macOS:**
-  Install Graphviz via Homebrew:
-  ```bash
-  brew install graphviz
-  ```
+  Install Graphviz via Homebrew:
+  ```bash
+  brew install graphviz
+  ```
 
 - **Linux:**
-  Install Graphviz via APT:
-  ```bash
-  sudo apt-get install graphviz
-  ```
+  Install Graphviz via APT:
+  ```bash
+  sudo apt-get install graphviz
+  ```
 
 ### Python Package
 
@@ -108,13 +98,13 @@ build/
 tableau_parser_app/
 ├── app.py
 ├── components/
-│   └── uploader.py
+│   └── uploader.py
 ├── parser/
-│   └── tableau_parser.py
+│   └── tableau_parser.py
 ├── utils/
-│   ├── dag.py
-│   ├── helpers.py
-│   └── report.py
+│   ├── dag.py
+│   ├── helpers.py
+│   └── report.py
 ├── logs/
 .gitignore
 Dockerfile
@@ -127,15 +117,15 @@ setup.py
 
 - **build/**: Contains build artifacts and compiled files.
 - **tableau_parser_app/**: Main application directory.
-  - **app.py**: Entry point of the Streamlit application.
-  - **components/**: Reusable UI components.
-    - **uploader.py**: Handles file upload functionality.
-  - **parser/**: Modules related to parsing Tableau workbooks.
-    - **tableau_parser.py**: Core parser logic for `.twbx` files.
-  - **utils/**: Utility scripts and helper functions.
-    - **dag.py**: Generates Dependency DAG visualizations.
-    - **helpers.py**: Contains helper functions used across the app.
-    - **report.py**: Manages report generation and export.
+  - **app.py**: Entry point of the Streamlit application.
+  - **components/**: Reusable UI components.
+    - **uploader.py**: Handles file upload functionality.
+  - **parser/**: Modules related to parsing Tableau workbooks.
+    - **tableau_parser.py**: Core parser logic for `.twbx` files.
+  - **utils/**: Utility scripts and helper functions.
+    - **dag.py**: Generates Dependency DAG visualizations.
+    - **helpers.py**: Contains helper functions used across the app.
+    - **report.py**: Manages report generation and export.
 - **logs/**: Directory for log files.
 - **.gitignore**: Specifies files and directories to be ignored by Git.
 - **Dockerfile**: Configuration for Docker containerization.
@@ -145,6 +135,17 @@ setup.py
 - **requirements.txt**: Python dependencies required for the project.
 - **setup.py**: Setup script for packaging and distribution.
 
+<table>
+  <tr>
+    <td><strong>Create Report</strong></td>
+    <td><strong>Select Worksheet of DAG</strong></td>
+  </tr>
+  <tr>
+    <td><img src="./gif/report.gif" alt="Create Report" width="400"/></td>
+    <td><img src="./gif/worksheet.gif" alt="Select Worksheet DAG" width="400"/></td>
+  </tr>
+</table>
+
 ### 2. Deployment to Test and Live PyPI
 
 Deploying your package to PyPI involves two main steps: publishing to Test PyPI for testing purposes and then to the Live PyPI for public distribution.
@@ -153,9 +154,9 @@ Deploying your package to PyPI involves two main steps: publishing to Test PyPI 
 
 - Ensure you have an account on [PyPI](https://pypi.org/) and [Test PyPI](https://test.pypi.org/).
 - Install necessary tools:
-  ```bash
-  pip install setuptools twine
-  ```
+  ```bash
+  pip install setuptools twine
+  ```
 
 #### **Step 1: Build the Package**
 
@@ -194,12 +195,12 @@ twine upload dist/*
 
 ### 3. Setting Up CI/CD Pipeline with GitHub Actions
 
-*Coming Soon
+*Coming Soon*
 
 ### 4. Developer Contact
 
-*Coming Soon
+*Coming Soon*
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-

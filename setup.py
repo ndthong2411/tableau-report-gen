@@ -5,8 +5,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="tableau-report-gen",  
-    version="0.1.16",  
-    author="Vinh,Thong",
+    version="0.1.17",  
+    author="Vinh, Thong",
     author_email="hovinh39@gmail.com,ndthong2411@gmail.com",
     description="A tool to generate reports from Tableau workbooks.",
     long_description=long_description,
