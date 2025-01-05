@@ -1,7 +1,5 @@
-```markdown
-# Tableau Report Gen
 
-A Streamlit application to parse Tableau Workbook (`.twbx`) files and generate comprehensive reports, including version information, calculated fields, original fields, worksheets, data sources, and a Dependency DAG visualization.
+# Tableau Report Gen
 
 ![Tableau Report Gen Demo](./gif/tableau_demo.gif)
 
@@ -184,10 +182,6 @@ twine upload dist/*
 
 - **Username and Password:** Enter your PyPI credentials when prompted.
 
-### Notes
-
-- **Versioning:** Increment the package version in `setup.py` before each upload to avoid conflicts.
-- **Automation:** Consider automating the deployment process using CI/CD pipelines (see next section).
 
 ### Setting Up CI/CD Pipeline with GitHub Actions
 
