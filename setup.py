@@ -5,9 +5,9 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="tableau-report-gen",  
-    version="0.1.15",  
-    author="Thong",
-    author_email="vodanh4334@gmail.com",
+    version="0.1.17",  
+    author="Vinh, Thong",
+    author_email="hovinh39@gmail.com,ndthong2411@gmail.com",
     description="A tool to generate reports from Tableau workbooks.",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -32,7 +32,7 @@ setup(
     include_package_data=True,  
     entry_points={
         'console_scripts': [
-            'trggo=tableau_report_gen.launcher:main',  
+            'trggo=tableau_report_gen.launcher:main',  # Allows users to run the app via CLI
         ],
     },
 )
