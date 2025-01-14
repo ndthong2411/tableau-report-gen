@@ -182,11 +182,27 @@ twine upload dist/*
 
 - **Username and Password:** Enter your PyPI credentials when prompted.
 
+---
 
-### Setting Up CI/CD Pipeline with GitHub Actions
+### CI/CD Workflow
 
-*Coming Soon*
+Our CI/CD pipeline is managed entirely through GitHub Actions using the `.github/workflows/ci.yml` file. This file performs the following functions:
 
+- **Triggering Events:**  
+  The pipeline is automatically triggered on pushes, pull requests to the `main` branch, or through manual invocation using GitHub’s workflow_dispatch.
+
+- **Build and Test:**  
+  - Sets up a Python (3.12) environment.
+  - Installs the necessary dependencies from `requirements.txt`.
+  <!-- - Runs code linting (with flake8) to ensure code quality. -->
+  - Executes the test suite (using pytest) to catch issues early.
+
+- **Deployment (Optional):**  
+  If configured, the workflow can automatically build and package your application. There is an optional step to deploy the package (for example, to PyPI) which can be enabled by uncommenting the relevant lines and setting up the appropriate secrets.
+
+This single file is the heart of our automation process, ensuring that every change is built, tested, and optionally deployed with minimal manual intervention. 
+
+---
 ### Developer Contact
 
 *Coming Soon*
