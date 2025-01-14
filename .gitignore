@@ -163,5 +163,6 @@ cython_debug/
 
 # Tableau temporary files
 temp_uploaded.twbx
+temp_uploaded.twbx
 *.twbx
 setup.py
