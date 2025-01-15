@@ -1,8 +1,8 @@
 import base64
-import io
-import tempfile
+# import io
+# import tempfile
 import zipfile
-import xml.etree.ElementTree as ET
+# import xml.etree.ElementTree as ET
 
 import pandas as pd
 import pytest

@@ -2,7 +2,7 @@
 
 import pandas as pd
 from xhtml2pdf import pisa
-import base64
+# import base64
 from datetime import datetime
 import logzero
 from logzero import logger

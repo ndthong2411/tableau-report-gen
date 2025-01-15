@@ -2,7 +2,7 @@
 
 import pandas as pd
 import networkx as nx
-import logzero
+# import logzero
 from logzero import logger
 
 
@@ -21,10 +21,10 @@ def generate_dag(
         G.add_node(root_placeholder, type="Root")
         logger.info(f"Added Root Node: {root_placeholder}")
 
-    # Create a mapping from Data Source ID to Caption for easy access
-    data_source_id_to_caption = data_sources_df.set_index("Data Source ID")[
-        "Caption"
-    ].to_dict()
+    # # Create a mapping from Data Source ID to Caption for easy access
+    # data_source_id_to_caption = data_sources_df.set_index("Data Source ID")[
+    #     "Caption"
+    # ].to_dict()
 
     # Add Data Sources
     for _, ds in data_sources_df.iterrows():
