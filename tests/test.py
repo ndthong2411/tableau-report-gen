@@ -14,9 +14,8 @@ from tableau_report_gen.utils.report import generate_html_report, convert_html_t
 from tableau_report_gen.utils.dag import generate_dag
 from tableau_report_gen.parser.tableau_parser import TableauWorkbookParser
 
-############################
 # Tests for utils/helpers.py
-############################
+
 
 def test_image_to_base64():
     """
@@ -27,9 +26,8 @@ def test_image_to_base64():
     expected = base64.b64encode(sample_bytes).decode("utf-8")
     assert encoded == expected, "Base64 encoding did not match the expected output."
 
-############################
 # Tests for utils/report.py
-############################
+
 
 def test_generate_html_report():
     """
@@ -61,6 +59,7 @@ def test_generate_html_report():
     assert "Version Information" in html, "Selected section missing from HTML output."
     assert "Dummy DS" in html, "Merged data source information missing from HTML output."
 
+
 def test_convert_html_to_pdf():
     """
     Test that convert_html_to_pdf converts a simple HTML string to PDF (non-empty binary data).
@@ -69,18 +68,19 @@ def test_convert_html_to_pdf():
     pdf_bytes = convert_html_to_pdf(sample_html)
     assert pdf_bytes is not None, "PDF conversion returned None."
     # Check that the result is not empty and is binary data.
-    assert isinstance(pdf_bytes, bytes), "Converted PDF is not in bytes format."
+    assert isinstance(
+        pdf_bytes, bytes), "Converted PDF is not in bytes format."
     assert len(pdf_bytes) > 0, "Converted PDF is empty."
 
-############################
 # Tests for utils/dag.py
-############################
+
 
 def test_generate_dag():
     """
     Test that generate_dag creates a valid NetworkX DiGraph.
     """
-    # Create dummy DataFrames for calculated and original fields and data sources.
+    # Create dummy DataFrames for calculated and original fields and data
+    # sources.
     data_sources_df = pd.DataFrame({
         "Data Source ID": ["DS_1"],
         "Caption": ["Dummy DataSource"],
@@ -131,9 +131,8 @@ def test_generate_dag():
     # Check at least one edge exists
     assert len(G.edges) > 0, "No edges were created in the DAG."
 
-############################
 # Tests for parser/tableau_parser.py
-############################
+
 
 @pytest.fixture
 def dummy_twbx(tmp_path):
@@ -170,6 +169,7 @@ def dummy_twbx(tmp_path):
         zf.writestr("dummy.twb", dummy_xml)
     return str(twbx_path)
 
+
 def test_tableau_parser(dummy_twbx):
     """
     Test TableauWorkbookParser by providing it with a dummy .twbx file.
@@ -180,28 +180,34 @@ def test_tableau_parser(dummy_twbx):
     # Decompress and parse the dummy twbx
     parser.decompress_twbx()
     assert parser.twb_content is not None, "Failed to extract .twb content from dummy .twbx file."
-    
+
     # Parsing should populate metadata and data
     parser.parse_twb()
     report = parser.get_report()
     metadata = report.get("metadata", {})
     data = report.get("data", {})
 
-    # Check some expected metadata values (using default/fallbacks if not found)
+    # Check some expected metadata values (using default/fallbacks if not
+    # found)
     assert "version" in metadata, "Workbook version not parsed."
     # Since our dummy XML has the version attribute, it should be captured.
     assert metadata["version"] == "2021.1", "Workbook version did not match expected value."
-    
+
     # Check that the data sources DataFrame is not empty.
     data_sources = data.get("data_sources")
-    assert isinstance(data_sources, pd.DataFrame), "Data sources not stored as a DataFrame."
+    assert isinstance(
+        data_sources, pd.DataFrame), "Data sources not stored as a DataFrame."
     assert not data_sources.empty, "No data sources extracted from dummy .twbx."
 
     # Optionally, check that calculated and original fields are extracted.
     calc_fields = metadata.get("calculated_fields")
     orig_fields = metadata.get("original_fields")
-    assert isinstance(calc_fields, pd.DataFrame), "Calculated fields not stored as a DataFrame."
-    assert isinstance(orig_fields, pd.DataFrame), "Original fields not stored as a DataFrame."
-    # A minimal check to see if at least one record was created from the dummy XML.
-    assert len(calc_fields) >= 1, "No calculated fields extracted from dummy .twbx."
+    assert isinstance(
+        calc_fields, pd.DataFrame), "Calculated fields not stored as a DataFrame."
+    assert isinstance(
+        orig_fields, pd.DataFrame), "Original fields not stored as a DataFrame."
+    # A minimal check to see if at least one record was created from the dummy
+    # XML.
+    assert len(
+        calc_fields) >= 1, "No calculated fields extracted from dummy .twbx."
     assert len(orig_fields) >= 1, "No original fields extracted from dummy .twbx."

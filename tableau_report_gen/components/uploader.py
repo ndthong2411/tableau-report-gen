@@ -5,6 +5,7 @@ import os
 import logzero
 from logzero import logger
 
+
 def file_uploader_component():
     uploaded_file = st.sidebar.file_uploader(
         "Upload a Tableau Workbook (`.twbx` file)",

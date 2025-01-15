@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import streamlit
 
+
 def main():
     try:
         current_dir = Path(__file__).parent
