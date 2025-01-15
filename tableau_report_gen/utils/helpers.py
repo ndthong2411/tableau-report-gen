@@ -21,4 +21,4 @@ def display_dataframe(df, max_rows=10, row_height=33, header_height=50):
 
 def image_to_base64(img_bytes):
 
-    return base64.b64encode(img_bytes).decode('utf-8')
+    return base64.b64encode(img_bytes).decode("utf-8")

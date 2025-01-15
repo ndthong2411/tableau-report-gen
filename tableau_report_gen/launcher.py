@@ -16,11 +16,7 @@ def main():
             print(f"Error: app.py not found at {app_path}")
             sys.exit(1)
 
-        cmd = [
-            "streamlit",
-            "run",
-            str(app_path)
-        ]
+        cmd = ["streamlit", "run", str(app_path)]
 
         if len(sys.argv) > 1:
             cmd.extend(sys.argv[1:])
