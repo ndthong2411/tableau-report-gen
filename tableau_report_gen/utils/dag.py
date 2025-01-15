@@ -34,8 +34,7 @@ def generate_dag(
                 root_placeholder if root_placeholder else "Unknown Data Source"
             )
             logger.warning(
-                f"Data Source Caption missing. Using Root Placeholder: {data_source_name}"
-            )
+                f"Data Source Caption missing. Using Root Placeholder: {data_source_name}")
         else:
             data_source_name = str(data_source_name)
 
@@ -61,7 +60,8 @@ def generate_dag(
     # Add Original Fields
     for _, field in original_fields_df.iterrows():
         field_name = field.get("Field Name", "Unknown Original Field")
-        data_source_caption = field.get("Data Source Caption", "Unknown Source")
+        data_source_caption = field.get(
+            "Data Source Caption", "Unknown Source")
 
         if (
             selected_worksheet
@@ -73,13 +73,13 @@ def generate_dag(
         if pd.isna(field_name):
             field_name = "Unknown Original Field"
 
-        if pd.isna(data_source_caption) or data_source_caption == "Unknown Source":
+        if pd.isna(
+                data_source_caption) or data_source_caption == "Unknown Source":
             data_source_caption = (
                 root_placeholder if root_placeholder else "Unknown Source"
             )
             logger.warning(
-                f"Data Source Caption missing for field '{field_name}'. Using Root Placeholder: {data_source_caption}"
-            )
+                f"Data Source Caption missing for field '{field_name}'. Using Root Placeholder: {data_source_caption}")
 
         data_source_caption = str(data_source_caption)
 
@@ -87,10 +87,12 @@ def generate_dag(
         logger.info(f"Added Original Field Node: {field_name}")
 
         if data_source_caption != "Unknown Source":
-            G.add_edge(data_source_caption, field_name, label="originates_from")
+            G.add_edge(
+                data_source_caption,
+                field_name,
+                label="originates_from")
             logger.info(
-                f"Added Edge: {data_source_caption} -> {field_name} [originates_from]"
-            )
+                f"Added Edge: {data_source_caption} -> {field_name} [originates_from]")
 
     # Add Calculated Fields
     for _, calc in calculated_fields_df.iterrows():
@@ -108,13 +110,13 @@ def generate_dag(
         if pd.isna(calc_field_name):
             calc_field_name = "Unknown Calculated Field"
 
-        if pd.isna(data_source_caption) or data_source_caption == "Unknown Source":
+        if pd.isna(
+                data_source_caption) or data_source_caption == "Unknown Source":
             data_source_caption = (
                 root_placeholder if root_placeholder else "Unknown Source"
             )
             logger.warning(
-                f"Data Source Caption missing for calculated field '{calc_field_name}'. Using Root Placeholder: {data_source_caption}"
-            )
+                f"Data Source Caption missing for calculated field '{calc_field_name}'. Using Root Placeholder: {data_source_caption}")
 
         data_source_caption = str(data_source_caption)
 
@@ -122,17 +124,18 @@ def generate_dag(
         logger.info(f"Added Calculated Field Node: {calc_field_name}")
 
         if data_source_caption != "Unknown Source":
-            G.add_edge(data_source_caption, calc_field_name, label="originates_from")
+            G.add_edge(
+                data_source_caption,
+                calc_field_name,
+                label="originates_from")
             logger.info(
-                f"Added Edge: {data_source_caption} -> {calc_field_name} [originates_from]"
-            )
+                f"Added Edge: {data_source_caption} -> {calc_field_name} [originates_from]")
 
         for dep in dependencies:
             if pd.isna(dep) or dep == "Unknown Dependency":
                 dep = root_placeholder if root_placeholder else "Unknown Dependency"
                 logger.warning(
-                    f"Dependency missing for calculated field '{calc_field_name}'. Using Root Placeholder: {dep}"
-                )
+                    f"Dependency missing for calculated field '{calc_field_name}'. Using Root Placeholder: {dep}")
             dep = str(dep)
             G.add_edge(dep, calc_field_name, label="depends_on")
             logger.info(f"Added Edge: {dep} -> {calc_field_name} [depends_on]")

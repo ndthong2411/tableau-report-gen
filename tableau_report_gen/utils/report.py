@@ -11,8 +11,9 @@ import os
 
 
 def generate_html_report(
-    selected_sections, report, templates_path="reports/templates/report_template.html"
-):
+        selected_sections,
+        report,
+        templates_path="reports/templates/report_template.html"):
     html_report = "<html><head><title>Tableau Report</title></head><body>"
     html_report += f"<h1>Tableau Workbook Report - {
         datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</h1>"
@@ -21,10 +22,10 @@ def generate_html_report(
         html_report += f"<h2>{section}</h2>"
         if section == "Version Information":
             version_info = {
-                "Version": report["metadata"].get("version", "Unknown"),
-                "Source Platform": report["metadata"].get("source_platform", "Unknown"),
-                "Source Build": report["metadata"].get("source_build", "Unknown"),
-            }
+                "Version": report["metadata"].get(
+                    "version", "Unknown"), "Source Platform": report["metadata"].get(
+                    "source_platform", "Unknown"), "Source Build": report["metadata"].get(
+                    "source_build", "Unknown"), }
             html_report += f"<pre>{version_info}</pre>"
         elif section == "Calculated Fields":
             calculated_fields_df = report["metadata"].get(
@@ -32,7 +33,8 @@ def generate_html_report(
             )
             if not calculated_fields_df.empty:
                 # Merge with Data Sources to include Data Source Caption
-                df_data_sources = report["data"].get("data_sources", pd.DataFrame())
+                df_data_sources = report["data"].get(
+                    "data_sources", pd.DataFrame())
                 if not df_data_sources.empty:
                     logger.info(
                         f"Data Sources Columns Before Merge: {
@@ -59,8 +61,9 @@ def generate_html_report(
                     )
 
                     calculated_fields_df.rename(
-                        columns={"Caption": "Data Source Caption"}, inplace=True
-                    )
+                        columns={
+                            "Caption": "Data Source Caption"},
+                        inplace=True)
 
                     if "Data Source Caption" not in calculated_fields_df.columns:
                         logger.error(
@@ -79,7 +82,8 @@ def generate_html_report(
             )
             if not original_fields_df.empty:
                 # Merge with Data Sources to include Data Source Caption
-                df_data_sources = report["data"].get("data_sources", pd.DataFrame())
+                df_data_sources = report["data"].get(
+                    "data_sources", pd.DataFrame())
                 if not df_data_sources.empty:
                     original_fields_df = original_fields_df.merge(
                         df_data_sources[["Data Source ID", "Caption"]],
@@ -87,16 +91,19 @@ def generate_html_report(
                         how="left",
                     )
                     original_fields_df.rename(
-                        columns={"Caption": "Data Source Caption"}, inplace=True
-                    )
+                        columns={
+                            "Caption": "Data Source Caption"},
+                        inplace=True)
                 html_report += original_fields_df.to_html(index=False)
             else:
                 html_report += "<p>No original fields found.</p>"
         elif section == "Worksheets":
-            worksheets_df = report["metadata"].get("worksheets", pd.DataFrame())
+            worksheets_df = report["metadata"].get(
+                "worksheets", pd.DataFrame())
             if not worksheets_df.empty:
                 # Merge with Data Sources to include Data Source Caption
-                df_data_sources = report["data"].get("data_sources", pd.DataFrame())
+                df_data_sources = report["data"].get(
+                    "data_sources", pd.DataFrame())
                 if not df_data_sources.empty:
                     worksheets_df = worksheets_df.merge(
                         df_data_sources[["Data Source ID", "Caption"]],
@@ -104,14 +111,16 @@ def generate_html_report(
                         how="left",
                     )
                     worksheets_df.rename(
-                        columns={"Caption": "Data Source Caption"}, inplace=True
-                    )
+                        columns={
+                            "Caption": "Data Source Caption"},
+                        inplace=True)
                 html_report += worksheets_df.to_html(index=False)
             else:
                 html_report += "<p>No worksheets found.</p>"
         elif section == "Data Sources":
             # Handle Data Sources as a DataFrame
-            df_data_sources = report["data"].get("data_sources", pd.DataFrame())
+            df_data_sources = report["data"].get(
+                "data_sources", pd.DataFrame())
             if not df_data_sources.empty:
                 html_report += df_data_sources.to_html(index=False)
             else:

@@ -73,7 +73,8 @@ def test_convert_html_to_pdf():
     pdf_bytes = convert_html_to_pdf(sample_html)
     assert pdf_bytes is not None, "PDF conversion returned None."
     # Check that the result is not empty and is binary data.
-    assert isinstance(pdf_bytes, bytes), "Converted PDF is not in bytes format."
+    assert isinstance(
+        pdf_bytes, bytes), "Converted PDF is not in bytes format."
     assert len(pdf_bytes) > 0, "Converted PDF is empty."
 
 
@@ -229,5 +230,6 @@ def test_tableau_parser(dummy_twbx):
     ), "Original fields not stored as a DataFrame."
     # A minimal check to see if at least one record was created from the dummy
     # XML.
-    assert len(calc_fields) >= 1, "No calculated fields extracted from dummy .twbx."
+    assert len(
+        calc_fields) >= 1, "No calculated fields extracted from dummy .twbx."
     assert len(orig_fields) >= 1, "No original fields extracted from dummy .twbx."
