@@ -78,9 +78,11 @@ def main():
     # App Title and Description
     st.title("📊 Tableau Workbook Parser and Report Generator")
     st.write("""
-    Upload a Tableau Workbook (`.twbx` file) to parse its contents and generate comprehensive reports,
-    including version information, calculated fields, original fields, worksheets, and data sources. Additionally, visualize
-    dependencies between calculated fields and original columns using a Directed Acyclic Graph (DAG).
+    Upload a Tableau Workbook (`.twbx` file) to parse its contents
+    and generate comprehensive reports, including version information,
+    calculated fields, original fields, worksheets, and data sources.
+    Additionally, visualize dependencies between calculated fields and
+    original columns using a Directed Acyclic Graph (DAG).
     """)
 
     # Sidebar: File Uploader and Settings
