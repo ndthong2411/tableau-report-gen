@@ -33,7 +33,7 @@ build:
 # run
 run:
 	@echo "Starting Streamlit app..."
-	streamlit run app.py --server.port=8501 --server.address=0.0.0.0
+	streamlit run tableau_report_gen/app.py --server.port=8501 --server.address=0.0.0.0
 
 
 # clean
