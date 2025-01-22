@@ -1,7 +1,7 @@
 # Tableau Report Gen
 
-[![PyPI version](https://badge.fury.io/py/tableau-report-gen.svg)](https://test.pypi.org/project/tableau-report-gen/)
-[![Python Versions](https://img.shields.io/pypi/pyversions/tableau-report-gen.svg)](https://test.pypi.org/project/tableau-report-gen/)
+[![PyPI version](https://badge.fury.io/py/tableau-report-gen.svg)](https://pypi.org/project/tableau-report-gen/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/tableau-report-gen.svg)](https://pypi.org/project/tableau-report-gen/)
 [![Built with Streamlit](https://img.shields.io/badge/Built%20with-Streamlit-blueviolet)](https://streamlit.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
