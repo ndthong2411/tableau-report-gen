@@ -2,7 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/tableau-report-gen.svg?cacheSeconds=3600)](https://pypi.org/project/tableau-report-gen/)
 [![Python Version](https://img.shields.io/badge/python-3.12-blue)](https://pypi.org/project/tableau-report-gen/)
-[![Built with Streamlit](https://img.shields.io/badge/Built%20with-Streamlit-blueviolet)](https://streamlit.io/)
+[![Built with Streamlit](https://img.shields.io/badge/Built%20with-Streamlit-red)](https://streamlit.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ![Tableau Report Gen Demo](./gif/tableau_demo.gif)
